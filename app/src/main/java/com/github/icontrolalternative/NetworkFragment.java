@@ -13,9 +13,11 @@ import androidx.fragment.app.FragmentManager;
 
 import org.apache.commons.net.telnet.TelnetClient;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.URL;
 
 /**
  * Implementation of headless Fragment that runs an AsyncTask to fetch data from the network.
@@ -133,7 +135,6 @@ public class NetworkFragment extends Fragment {
                     // If no connectivity, cancel task and update Callback with null data.
                     callback.updateFromDownload(null);
                     cancel(true);
-                } else {
                 }
             }
         }
@@ -160,13 +161,17 @@ public class NetworkFragment extends Fragment {
                         OutputStream outputStream = telnet.getOutputStream();
                         outputStream.write(command.getBytes());
                         outputStream.flush();
-                        Thread.sleep(100);
+                        InputStream inStream = telnet.getInputStream();
+                        BufferedReader r = new BufferedReader(new InputStreamReader(inStream));
+                        resultString = r.readLine();
                          telnet.disconnect();
                     } catch (IOException e) {
                         Log.e("Command", "Could not send Command", e);
                     }
                     if (resultString != null) {
-                        result = new Result(resultString);
+                        Log.d("Result", resultString);
+                        FlStringConverter conv = new FlStringConverter();
+                        result = new Result(conv.hexToString(resultString));
                     } else {
                         throw new IOException("No response received.");
                     }

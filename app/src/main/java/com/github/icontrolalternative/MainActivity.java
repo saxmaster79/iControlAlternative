@@ -5,6 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.fragment.app.FragmentActivity;
 
@@ -42,7 +43,8 @@ public class MainActivity extends FragmentActivity implements DownloadCallback<S
     }
     @Override
     public void updateFromDownload(String result) {
-        // Update your UI here based on result of download.
+        TextView tv = (TextView)findViewById(R.id.textOut);
+        tv.setText(result);
     }
 
     @Override
