@@ -4,13 +4,16 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.view.View;
 import android.widget.TextView;
 
 import androidx.fragment.app.FragmentActivity;
 
 
-public class MainActivity extends FragmentActivity implements DownloadCallback<String> {
+public class MainActivity extends FragmentActivity implements TelnetCallback<String> {
 
     // Keep a reference to the NetworkFragment, which owns the AsyncTask object
     // that is used to execute network ops.
@@ -22,8 +25,16 @@ public class MainActivity extends FragmentActivity implements DownloadCallback<S
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        networkFragment = NetworkFragment.getInstance(getSupportFragmentManager());
+        Handler handler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                TextView tv = findViewById(R.id.textOut);
+                tv.setText(msg.obj.toString());
 
+            }
+        };
+
+        networkFragment = NetworkFragment.getInstance(getSupportFragmentManager(), handler);
 
     }
     private void sendCommand(String command) {
@@ -43,8 +54,9 @@ public class MainActivity extends FragmentActivity implements DownloadCallback<S
     }
     @Override
     public void updateFromDownload(String result) {
-        TextView tv = (TextView)findViewById(R.id.textOut);
-        tv.setText(result);
+
+
+
     }
 
     @Override
@@ -53,28 +65,6 @@ public class MainActivity extends FragmentActivity implements DownloadCallback<S
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         return networkInfo;
-    }
-
-    @Override
-    public void onProgressUpdate(int progressCode, int percentComplete) {
-        /*switch(progressCode) {
-            // You can add UI behavior for progress updates here.
-            case Progress.ERROR:
-            ...
-                break;
-            case Progress.CONNECT_SUCCESS:
-            ...
-                break;
-            case Progress.GET_INPUT_STREAM_SUCCESS:
-            ...
-                break;
-            case Progress.PROCESS_INPUT_STREAM_IN_PROGRESS:
-            ...
-                break;
-            case Progress.PROCESS_INPUT_STREAM_SUCCESS:
-            ...
-                break;
-        }*/
     }
 
     @Override
