@@ -14,8 +14,9 @@ import java.io.InputStreamReader;
 public class TelnetReader implements Runnable {
     private static final String HOST = "192.168.1.105";
     private static final int FL_TEXT = 1;
+    public static final String CONNECTED = "Connected";
     private TelnetClient telnet;
-    private final Handler handler;
+    private Handler handler;
 
     public TelnetReader(Handler handler) {
         this.handler = handler;
@@ -28,10 +29,12 @@ public class TelnetReader implements Runnable {
         try {
             while (true) {
                 if (telnet == null) {
+                    sendMessage("Connecting to "+HOST+"...");
                     telnet = new TelnetClient();
                     telnet.setConnectTimeout(5_000);
                     try {
                         telnet.connect(HOST);
+                        sendMessage(CONNECTED);
                     } catch (IOException e) {
                         telnet = null;
                         Log.e("TelnetReader", "Could not connect", e);
@@ -41,13 +44,10 @@ public class TelnetReader implements Runnable {
                 }
 
                 InputStream inStream = telnet.getInputStream();
-                BufferedReader r = inStream ==null?null:new BufferedReader(new InputStreamReader(inStream));
-                if (r!=null && r.ready()) {
+                BufferedReader r = inStream == null ? null : new BufferedReader(new InputStreamReader(inStream));
+                if (r != null && r.ready()) {
                     String resultString = new FlStringConverter().hexToString(r.readLine());
-                    Message msg = Message.obtain();
-                    msg.obj = resultString;
-                    msg.setTarget(handler);
-                    msg.sendToTarget();
+                    sendMessage(resultString);
                 } else {
                     sleep();
                 }
@@ -55,6 +55,13 @@ public class TelnetReader implements Runnable {
         } catch (IOException ex) {
             Log.e("TelnetReader", "IoException", ex);
         }
+    }
+
+    private void sendMessage(String string) {
+        Message msg = Message.obtain();
+        msg.obj = string;
+        msg.setTarget(handler);
+        msg.sendToTarget();
     }
 
     private void sleep() {
@@ -67,5 +74,10 @@ public class TelnetReader implements Runnable {
 
     public TelnetClient getTelnet() {
         return this.telnet;
+    }
+
+    public void setHandler(Handler handler) {
+        this.handler = handler;
+        sendMessage(CONNECTED);
     }
 }

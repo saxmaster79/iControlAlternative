@@ -28,7 +28,7 @@ public class NetworkFragment extends Fragment {
     private static TelnetReader reader;
 
     private TelnetCallback<String> callback;
-    private DownloadTask downloadTask;
+    private TelnetCommandTask telnetCommandTask;
 
 
     /**
@@ -44,9 +44,10 @@ public class NetworkFragment extends Fragment {
             networkFragment = new NetworkFragment();
             Bundle args = new Bundle();
             networkFragment.setArguments(args);
-            //Todo irgendwie über bundle lösen...
             reader = new TelnetReader(handler);
             fragmentManager.beginTransaction().add(networkFragment, TAG).commit();
+        }else{
+            reader.setHandler(handler);
         }
 
          return networkFragment;
@@ -88,28 +89,28 @@ public class NetworkFragment extends Fragment {
      */
     public void sendCommand(String command) {
         cancelDownload();
-        downloadTask = new DownloadTask(reader.getTelnet(), callback);
-        downloadTask.execute(command);
+        telnetCommandTask = new TelnetCommandTask(reader.getTelnet(), callback);
+        telnetCommandTask.execute(command);
     }
 
     /**
      * Cancel (and interrupt if necessary) any ongoing DownloadTask execution.
      */
     public void cancelDownload() {
-        if (downloadTask != null) {
-            downloadTask.cancel(true);
+        if (telnetCommandTask != null) {
+            telnetCommandTask.cancel(true);
         }
     }
 
     /**
      * Implementation of AsyncTask designed to fetch data from the network.
      */
-    private static class DownloadTask extends AsyncTask<String, Integer, DownloadTask.Result> {
+    private static class TelnetCommandTask extends AsyncTask<String, Integer, TelnetCommandTask.Result> {
 
         private TelnetCallback<String> callback;
         private TelnetClient telnet;
 
-        DownloadTask(TelnetClient telnet, TelnetCallback<String> callback) {
+        TelnetCommandTask(TelnetClient telnet, TelnetCallback<String> callback) {
             this.telnet = telnet;
             setCallback(callback);
         }
@@ -156,7 +157,7 @@ public class NetworkFragment extends Fragment {
          * Defines work to perform on the background thread.
          */
         @Override
-        protected DownloadTask.Result doInBackground(String... commands) {
+        protected TelnetCommandTask.Result doInBackground(String... commands) {
             Result result = null;
             if (!isCancelled() && commands != null && commands.length > 0) {
                 String command = commands[0] + "\r";

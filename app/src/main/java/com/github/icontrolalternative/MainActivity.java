@@ -20,7 +20,6 @@ public class MainActivity extends FragmentActivity implements TelnetCallback<Str
     private NetworkFragment networkFragment;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,14 +28,17 @@ public class MainActivity extends FragmentActivity implements TelnetCallback<Str
             @Override
             public void handleMessage(Message msg) {
                 TextView tv = findViewById(R.id.textOut);
-                tv.setText(msg.obj.toString());
-
+                String text = msg.obj.toString();
+                if (text == TelnetReader.CONNECTED)
+                    sendCommand("?FL");
+                tv.setText(text);
             }
         };
 
         networkFragment = NetworkFragment.getInstance(getSupportFragmentManager(), handler);
 
     }
+
     private void sendCommand(String command) {
         if (networkFragment != null) {
             // Execute the async download.
@@ -52,9 +54,18 @@ public class MainActivity extends FragmentActivity implements TelnetCallback<Str
     public void volDown(View view) {
         sendCommand("VD");
     }
+
+
+    public void inputUp(View view) {
+        sendCommand("FU");
+    }
+
+    public void inputDown(View view) {
+        sendCommand("FD");
+    }
+
     @Override
     public void updateFromDownload(String result) {
-
 
 
     }
