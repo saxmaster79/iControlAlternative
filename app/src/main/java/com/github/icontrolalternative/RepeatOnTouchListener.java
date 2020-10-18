@@ -6,7 +6,8 @@ import android.view.MotionEvent;
 import android.view.View;
 
 /**
- * Repeats the same action until the user releases the button
+ * Repeats the same action until the user releases the button.
+ * See https://stackoverflow.com/a/10511800/66207
  */
 public class RepeatOnTouchListener implements View.OnTouchListener {
 
