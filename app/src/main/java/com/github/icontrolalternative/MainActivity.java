@@ -58,7 +58,9 @@ public class MainActivity extends FragmentActivity implements TelnetCallback<Str
         }
     }
 
-
+    public void powerOff(View view) {
+        sendCommand("PF");
+    }
     public void inputUp(View view) {
         sendCommand("FU");
     }
@@ -87,10 +89,6 @@ public class MainActivity extends FragmentActivity implements TelnetCallback<Str
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     public void onAppBackgrounded() {
-        //App in background
-
-        Log.e(TAG, "************* backgrounded");
-        Log.e(TAG, "************* ${isActivityVisible()}");
         if (networkFragment != null) {
             networkFragment.cancel();
         }
@@ -98,10 +96,6 @@ public class MainActivity extends FragmentActivity implements TelnetCallback<Str
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     public void onAppForegrounded() {
-
-        Log.e(TAG, "************* foregrounded");
-        Log.e(TAG, "************* ${isActivityVisible()}");
-        // App in foreground
         if (networkFragment != null) {
             networkFragment.startTelnetReader();
         }

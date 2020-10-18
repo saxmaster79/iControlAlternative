@@ -99,9 +99,7 @@ public class TelnetReader implements Runnable {
     }
 
     private void sleep() throws InterruptedException {
-
-            Thread.sleep(500);
-
+        Thread.sleep(500);
     }
 
     public TelnetClient getTelnet() {

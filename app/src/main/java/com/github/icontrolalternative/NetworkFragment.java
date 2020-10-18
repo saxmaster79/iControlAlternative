@@ -163,7 +163,7 @@ public class NetworkFragment extends Fragment {
         protected TelnetCommandTask.Result doInBackground(String... commands) {
             Result result = null;
             if (!isCancelled() && commands != null && commands.length > 0) {
-                String command = commands[0] + "\r";
+                String command = commands[0] + TelnetClient.NETASCII_EOL;
                 String resultString = "xy";
                 try {
                     try {
