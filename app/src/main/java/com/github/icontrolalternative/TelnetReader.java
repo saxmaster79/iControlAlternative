@@ -15,6 +15,7 @@ public class TelnetReader implements Runnable {
     private static final String HOST = "192.168.1.105";
     private static final int FL_TEXT = 1;
     public static final String CONNECTED = "Connected";
+    private static final String TAG = "TelnetReader";
     private TelnetClient telnet;
     private Handler handler;
     private String lastString="";
@@ -25,10 +26,8 @@ public class TelnetReader implements Runnable {
 
     @Override
     public void run() {
-
-
         try {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 if (telnet == null) {
                     sendMessage("Connecting to "+HOST+"...");
                     telnet = new TelnetClient();
@@ -38,7 +37,7 @@ public class TelnetReader implements Runnable {
                         sendMessage(CONNECTED);
                     } catch (IOException e) {
                         telnet = null;
-                        Log.e("TelnetReader", "Could not connect", e);
+                        Log.e(TAG, "Could not connect", e);
                         sleep();
                         continue;
                     }
@@ -55,8 +54,11 @@ public class TelnetReader implements Runnable {
                     sleep();
                 }
             }
+            Log.i(TAG, "Thread.isInterrupted");
         } catch (IOException ex) {
-            Log.e("TelnetReader", "IoException", ex);
+            Log.e(TAG, "IoException", ex);
+        } catch (InterruptedException iue){
+            Log.d(TAG, "InterruptedException: ", iue);
         }
     }
 
@@ -96,12 +98,10 @@ public class TelnetReader implements Runnable {
         msg.sendToTarget();
     }
 
-    private void sleep() {
-        try {
+    private void sleep() throws InterruptedException {
+
             Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Log.e("TelnetReader", "sleep", e);
-        }
+
     }
 
     public TelnetClient getTelnet() {

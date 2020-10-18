@@ -11,6 +11,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ProcessLifecycleOwner;
 
 import org.apache.commons.net.telnet.TelnetClient;
 
@@ -18,13 +19,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Implementation of headless Fragment that runs an AsyncTask to fetch data from the network.
  */
 public class NetworkFragment extends Fragment {
     public static final String TAG = "NetworkFragment";
-    private static ExecutorService executor;
+    private static Future<?> executor;
     private static TelnetReader reader;
 
     private TelnetCallback<String> callback;
@@ -65,22 +67,19 @@ public class NetworkFragment extends Fragment {
         super.onAttach(context);
         // Host Activity will handle callbacks from task.
         callback = (TelnetCallback<String>) context;
-        executor = Executors.newSingleThreadExecutor();
-        executor.execute(reader);
-    }
+   }
 
     @Override
     public void onDetach() {
         super.onDetach();
         // Clear reference to host Activity to avoid memory leak.
         callback = null;
-        executor.shutdown();
     }
 
     @Override
     public void onDestroy() {
         // Cancel task when Fragment is destroyed.
-        cancelDownload();
+        cancel();
         super.onDestroy();
     }
 
@@ -88,7 +87,6 @@ public class NetworkFragment extends Fragment {
      * Start non-blocking execution of DownloadTask.
      */
     public void sendCommand(String command) {
-        cancelDownload();
         telnetCommandTask = new TelnetCommandTask(reader.getTelnet(), callback);
         telnetCommandTask.execute(command);
     }
@@ -96,10 +94,15 @@ public class NetworkFragment extends Fragment {
     /**
      * Cancel (and interrupt if necessary) any ongoing DownloadTask execution.
      */
-    public void cancelDownload() {
+    public void cancel() {
         if (telnetCommandTask != null) {
             telnetCommandTask.cancel(true);
         }
+        executor.cancel(true);
+    }
+
+    public void startTelnetReader() {
+        executor = Executors.newSingleThreadExecutor().submit(reader);
     }
 
     /**
