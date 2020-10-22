@@ -12,13 +12,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class TelnetReader implements Runnable {
+    public static final String CONNECTED = "Connected";
     private static final String HOST = "192.168.1.105";
     private static final int FL_TEXT = 1;
-    public static final String CONNECTED = "Connected";
     private static final String TAG = "TelnetReader";
     private TelnetClient telnet;
     private Handler handler;
-    private String lastString="";
+    private String lastString = "";
 
     public TelnetReader(Handler handler) {
         this.handler = handler;
@@ -27,45 +27,49 @@ public class TelnetReader implements Runnable {
     @Override
     public void run() {
         try {
-            while (!Thread.currentThread().isInterrupted()) {
-                if (telnet == null) {
-                    sendMessage("Connecting to "+HOST+"...");
-                    telnet = new TelnetClient();
-                    telnet.setConnectTimeout(5_000);
-                    try {
-                        telnet.connect(HOST);
-                        sendMessage(CONNECTED);
-                    } catch (IOException e) {
-                        telnet = null;
-                        Log.e(TAG, "Could not connect", e);
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    if (telnet == null) {
+                        sendMessage("Connecting to " + HOST + "...");
+                        telnet = new TelnetClient();
+                        telnet.setConnectTimeout(5_000);
+                        try {
+                            telnet.connect(HOST);
+                            sendMessage(CONNECTED);
+                        } catch (IOException e) {
+                            telnet = null;
+                            Log.e(TAG, "Could not connect", e);
+                            sleep();
+                            continue;
+                        }
+                    }
+
+                    InputStream inStream = telnet.getInputStream();
+                    BufferedReader r = inStream == null ? null : new BufferedReader(new InputStreamReader(inStream));
+                    if (r != null && r.ready()) {
+                        String resultString = new FlStringConverter().hexToString(r.readLine());
+                        resultString = handleTicker(resultString);
+                        sendMessage(resultString.trim());
+                        lastString = resultString;
+                    } else {
                         sleep();
-                        continue;
                     }
                 }
-
-                InputStream inStream = telnet.getInputStream();
-                BufferedReader r = inStream == null ? null : new BufferedReader(new InputStreamReader(inStream));
-                if (r != null && r.ready()) {
-                    String resultString = new FlStringConverter().hexToString(r.readLine());
-                    resultString= handleTicker(resultString);
-                    sendMessage(resultString.trim());
-                    lastString = resultString;
-                } else {
-                    sleep();
-                }
+                Log.i(TAG, "Thread.isInterrupted");
+            } catch (InterruptedException iue) {
+                Log.d(TAG, "InterruptedException: ", iue);
             }
-            Log.i(TAG, "Thread.isInterrupted");
+            telnet.disconnect();
+            telnet = null;
         } catch (IOException ex) {
             Log.e(TAG, "IoException", ex);
-        } catch (InterruptedException iue){
-            Log.d(TAG, "InterruptedException: ", iue);
         }
     }
 
     private String handleTicker(String newString) {
         newString = removeAll(newString, "\u0091");//Musical note
-        newString = removeAll(newString,"\u0092");//folder icon
-        if(lastString.contains(newString)) {
+        newString = removeAll(newString, "\u0092");//folder icon
+        if (lastString.contains(newString)) {
             //Ticker starts showing the Same text
             return lastString;
         }
@@ -79,7 +83,7 @@ public class TelnetReader implements Runnable {
         return newString;
     }
 
-    private String removeAll(String text, String regex){
+    private String removeAll(String text, String regex) {
         return text.replaceAll(regex, "");
     }
 

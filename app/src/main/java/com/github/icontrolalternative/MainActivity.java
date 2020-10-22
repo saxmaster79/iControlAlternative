@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -26,7 +25,7 @@ public class MainActivity extends FragmentActivity implements TelnetCallback<Str
     // Keep a reference to the NetworkFragment, which owns the AsyncTask object
     // that is used to execute network ops.
     private NetworkFragment networkFragment;
-
+    private boolean connected=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,12 +33,15 @@ public class MainActivity extends FragmentActivity implements TelnetCallback<Str
         ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
         setContentView(R.layout.activity_main);
         Handler handler = new Handler(Looper.getMainLooper()) {
+
             @Override
             public void handleMessage(Message msg) {
                 TextView tv = findViewById(R.id.textOut);
                 String text = msg.obj.toString();
-                if (text == TelnetReader.CONNECTED)
+                if (text == TelnetReader.CONNECTED) {
+                    connected = true;
                     sendCommand("?FL");
+                }
                 tv.setText(text);
             }
         };
@@ -59,7 +61,11 @@ public class MainActivity extends FragmentActivity implements TelnetCallback<Str
     }
 
     public void powerOff(View view) {
-        sendCommand("PF");
+        if (connected) {
+            sendCommand("PF");
+        } else {
+            sendCommand("PO");
+        }
     }
     public void inputUp(View view) {
         sendCommand("FU");
@@ -100,5 +106,4 @@ public class MainActivity extends FragmentActivity implements TelnetCallback<Str
             networkFragment.startTelnetReader();
         }
     }
-
 }
