@@ -16,6 +16,7 @@ public class TelnetReader implements Runnable {
     private static final String HOST = "192.168.1.105";
     private static final int FL_TEXT = 1;
     private static final String TAG = "TelnetReader";
+    private final FlStringConverter flStringConverter = new FlStringConverter();
     private TelnetClient telnet;
     private Handler handler;
     private String lastString = "";
@@ -47,7 +48,7 @@ public class TelnetReader implements Runnable {
                     InputStream inStream = telnet.getInputStream();
                     BufferedReader r = inStream == null ? null : new BufferedReader(new InputStreamReader(inStream));
                     if (r != null && r.ready()) {
-                        String resultString = new FlStringConverter().hexToString(r.readLine());
+                        String resultString = flStringConverter.hexToString(r.readLine());
                         resultString = handleTicker(resultString);
                         sendMessage(resultString.trim());
                         lastString = resultString;
